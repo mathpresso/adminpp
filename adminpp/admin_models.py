@@ -165,7 +165,12 @@ class AdminModel(object):
 
     class Meta:
         list_display = auto
-        search_fields = auto
+
+    predefined_meta_fields = [
+        'model',
+        'list_display',
+        'proxy_name',
+    ]
 
     def get_mapped_field(self, model_field):
         # Given django.Model field, find appropriate admin_models.Field class
@@ -187,7 +192,7 @@ class AdminModel(object):
         fields = []
         for field_name in self.get_field_names():
             if hasattr(self, field_name):
-                # Get field define at ModelAdmin
+                # Get field defined at ModelAdmin
                 field = getattr(self, field_name)
             else:
                 # Create field from Model.field
@@ -221,7 +226,7 @@ def create_proxy_model(model, proxy_name):
     return proxy_model
 
 
-def adminpp_register(site, admin_model):
+def register(site, admin_model):
     admin_class = AdminBuilder(admin_model).build()
     model = admin_model.Meta.model
 
@@ -231,3 +236,12 @@ def adminpp_register(site, admin_model):
         model = create_proxy_model(model, proxy_name)
 
     site.register(model, admin_class)
+
+
+def register_auto(site, model_class):
+    # Create AdminModel first
+    class AutoAdminModel(AdminModel):
+        class Meta:
+            model = model_class
+    # Register
+    register(site, AutoAdminModel)
